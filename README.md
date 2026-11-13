@@ -17,9 +17,9 @@
 
 ## 从这里开始
 
-### 方式一：GitHub 模板仓库
+### 方式一：GitHub 模板仓库（推荐）
 
-在仓库页点 **Use this template → Create a new repository**，填好新仓库名后 clone 到本地。若该按钮没有出现，说明仓库尚未开启模板仓库功能，用下面的方式二即可（内容完全一样）。
+本仓库已开启 GitHub **Template repository**。在仓库页点 **Use this template → Create a new repository**，填好新仓库名后 clone 到本地；生成的是干净的新仓库，不会带上模板仓库的提交历史。
 
 也可以命令行创建：
 
