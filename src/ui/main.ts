@@ -1,5 +1,5 @@
-import { connect } from '@biglazycat/plugin-sdk/browser';
-import type { Json } from '@biglazycat/plugin-sdk';
+import { connect } from 'blc-plugin-sdk/browser';
+import type { Json } from 'blc-plugin-sdk';
 import './style.css';
 
 type ViewState = { name: string; count: number };

@@ -1,4 +1,4 @@
-import { definePlugin, type Invocation, type PluginContext } from '@biglazycat/plugin-sdk';
+import { definePlugin, type Invocation, type PluginContext } from 'blc-plugin-sdk';
 
 type HelloArgs = { name?: string };
 

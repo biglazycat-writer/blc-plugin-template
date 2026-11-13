@@ -13,7 +13,7 @@
     "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
-    "@biglazycat/plugin-sdk": "file:vendor/plugin-sdk"
+    "blc-plugin-sdk": "1.0.0"
   },
   "devDependencies": {
     "@types/node": "22.19.0",
@@ -22,7 +22,6 @@
   },
   "files": [
     "dist",
-    "vendor",
     "README.md"
   ],
   "biglazycat": {

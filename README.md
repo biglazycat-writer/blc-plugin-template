@@ -63,7 +63,7 @@ npm install
 - `aiCallable` / `externalEffect` 如实标注；只有真正写外部系统的命令才设 `externalEffect: true`。
 - 新增命令时**同时**改清单和 `src/main.ts`；所有命令都在激活期注册，不要在首次调用时补注册。
 - 页面入口 `entry` 指向构建产物 `dist/ui/index.html`，不要改成源码路径。
-- `package.json` 的 `biglazycat` 字段是唯一清单，字段集合受 `vendor/plugin-sdk/manifest.schema.json` 约束（顶层 `additionalProperties: false`，不能随意加字段）。
+- `package.json` 的 `biglazycat` 字段是唯一清单，字段集合受 npm 包 `blc-plugin-sdk` 的 `manifest.schema.json` 约束（顶层 `additionalProperties: false`，不能随意加字段）。
 
 ---
 
@@ -71,12 +71,12 @@ npm install
 
 - Node `22.23.3`、npm 10.x。本机开发用相近的 22.x 也能构建测试，但宿主的平台准备流程会校验 `engines.node` 这个固定版本。
 - 大懒猫创作平台：在「系统设置 → 运行环境」配置本机 Node/npm；启用 MCP 服务中的插件工具可让外部编程工具直接调用。
-- 不需要全局安装任何包；`vendor/plugin-sdk` 是随工程提交的 SDK v1 **物理副本**，`.npmrc` 的 `install-links=true` 保证 `npm install` 装成副本而不是软链接。
+- 不需要全局安装任何包；SDK 由 npm 包 `blc-plugin-sdk@1.0.0` 提供，`npm install` 会从 registry 拉取（首次需联网），工程内不再保留 `vendor` 副本或 `.npmrc`。
 
 ## 三条命令
 
 ```bash
-npm install           # 安装依赖，生成/更新 package-lock.json
+npm install           # 从 npm 安装 blc-plugin-sdk 等依赖，生成/更新 package-lock.json
 npm run typecheck     # UI 与后台两份 tsconfig 严格类型检查（不产出文件）
 npm run build         # tsc 编译后台到 dist/main.js，Vite 打包页面到 dist/ui/
 npm test              # node --test tests/*.test.mjs（依赖 dist/main.js，先 build）
@@ -89,7 +89,7 @@ dist/main.js          后台入口，对应清单的 biglazycat.main
 dist/ui/index.html    页面入口，对应清单的 contributes.views[].entry
 ```
 
-> `dist/` 与 `node_modules/` 不进版本库；`package-lock.json` 与 `vendor/plugin-sdk` 必须提交。宿主的平台准备流程会用锁定版本执行 `npm ci`。
+> `dist/` 与 `node_modules/` 不进版本库；`package-lock.json` 必须提交（含 SDK 版本与 integrity）。宿主的平台准备流程用 `npm ci` 安装，因此首次安装需能访问 npm registry。
 
 ---
 
@@ -98,7 +98,6 @@ dist/ui/index.html    页面入口，对应清单的 contributes.views[].entry
 ```
 ├─ package.json              npm 元信息 + biglazycat 插件清单（唯一清单）
 ├─ package-lock.json         锁文件，必须提交
-├─ .npmrc                    install-links=true（SDK 装成物理副本）
 ├─ tsconfig.json             页面类型检查（noEmit）
 ├─ tsconfig.node.json        后台编译（outDir: dist）
 ├─ vite.config.mjs           页面打包（root: src/ui）
@@ -108,8 +107,7 @@ dist/ui/index.html    页面入口，对应清单的 contributes.views[].entry
 │     ├─ index.html          页面骨架
 │     ├─ main.ts             连接 SDK、调用命令、状态保存
 │     └─ style.css           最小样式
-├─ tests/plugin.test.mjs     后台命令测试（mock 宿主上下文）
-└─ vendor/plugin-sdk/        SDK v1 物理副本：类型定义、schema、LICENSE、说明
+└─ tests/plugin.test.mjs     后台命令测试（mock 宿主上下文）
 ```
 
 ## 模板演示了什么
@@ -161,7 +159,7 @@ dist/ui/index.html    页面入口，对应清单的 contributes.views[].entry
 
 ## 继续开发时可以用到的能力
 
-完整签名见 [`vendor/plugin-sdk/index.d.ts`](vendor/plugin-sdk/index.d.ts) 与 [`vendor/plugin-sdk/README.md`](vendor/plugin-sdk/README.md)：
+完整签名见 npm 包 [blc-plugin-sdk](https://www.npmjs.com/package/blc-plugin-sdk) 的 `index.d.ts` 与 [SDK 仓库 README](https://github.com/biglazycat-writer/blc-plugin-sdk#readme)：
 
 - `ctx.credentials` 存取密钥（Windows 为 DPAPI），**绝不**写入配置或日志。
 - `ctx.documents.snapshot / apply` 读写当前文档，`ctx.workspace` 与 `ctx.images` 读工作区资源与图片。
@@ -183,8 +181,9 @@ dist/ui/index.html    页面入口，对应清单的 contributes.views[].entry
 | `API_MISMATCH` | 页面必须在宿主插件视图内打开，不能用普通浏览器 |
 | 构建失败 | 看 `npm run typecheck` 输出与宿主 `plugin_diagnostics` |
 | `npm ci` 报引擎不匹配 | 宿主要求 `engines.node` 指定的 Node `22.23.3` |
+| `npm install` 找不到 `blc-plugin-sdk` | 检查 npm registry 可达性与 `package.json` 中的版本 `1.0.0` |
 | 页面刷新后状态丢失 | 确认调用了 `setState`，且 `onSave` 里写回了状态 |
 
 ## 授权
 
-`vendor/plugin-sdk` 为 MIT（见 [`vendor/plugin-sdk/LICENSE`](vendor/plugin-sdk/LICENSE)）。本模板的示例代码可自由复制、修改并用于你自己的插件项目，无需署名；仓库整体的开源授权由维护者决定。
+SDK 包 [blc-plugin-sdk](https://github.com/biglazycat-writer/blc-plugin-sdk) 为 MIT。本模板的示例代码可自由复制、修改并用于你自己的插件项目，无需署名；仓库整体的开源授权由维护者决定。
