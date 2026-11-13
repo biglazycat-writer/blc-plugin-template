@@ -51,6 +51,8 @@ jobs:
 
       - run: npm ci
       - run: npm run typecheck
+      # npm test 依赖构建产物 dist/main.js，必须先 build。
+      - run: npm run build
       - run: npm test
 
       # npm run package 会构建、按 files 组装 package/ 目录、校验结构并生成 sha256。
