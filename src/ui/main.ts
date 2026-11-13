@@ -1,5 +1,5 @@
 import { connect } from 'blc-plugin-sdk/browser';
-import type { Json } from 'blc-plugin-sdk';
+import { waitForTask, type Json } from 'blc-plugin-sdk';
 import './style.css';
 
 type ViewState = { name: string; count: number };
@@ -23,14 +23,7 @@ let dirty = false;
 /** 命令返回的是宿主任务，需要轮询任务状态才能拿到结果。 */
 async function invoke<T>(command: string, args: Json = {}): Promise<T> {
   const task = await sdk.commands.invoke(command, args);
-  for (;;) {
-    const current = await sdk.tasks.get(task.id);
-    if (current.state === 'completed') return current.result as unknown as T;
-    if (['failed', 'cancelled', 'interrupted', 'uncertain'].includes(current.state)) {
-      throw new Error(current.error ?? current.state);
-    }
-    await new Promise(resolve => setTimeout(resolve, 150));
-  }
+  return (await waitForTask(sdk.tasks, task.id)).result as unknown as T;
 }
 
 function element<K extends keyof HTMLElementTagNameMap>(tag: K, text?: string): HTMLElementTagNameMap[K] {

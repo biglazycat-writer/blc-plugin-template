@@ -1,5 +1,7 @@
 # blc-plugin-template · 大懒猫创作平台插件模板
 
+**简体中文** | [English](README.en.md)
+
 一个**开箱即跑**的插件起点工程：包含后台命令、浏览器视图、页面状态保存、构建配置和测试，全部基于官方插件 SDK v1。不用从空目录猜清单格式，clone 下来改几个名字就能开始写自己的插件。
 
 仓库：<https://github.com/biglazycat-writer/blc-plugin-template>
@@ -7,7 +9,7 @@
 | 项目 | 值 |
 | --- | --- |
 | 插件 API | `biglazycat.apiVersion = 1` |
-| 运行环境 | Node `22.23.3`（宿主提供，安装包不内嵌 Node） |
+| 运行环境 | Node `>=22.23.3 <23.0.0`（宿主提供，安装包不内嵌 Node） |
 | 后台 | TypeScript → `dist/main.js` |
 | 页面 | TypeScript + Vite → `dist/ui/index.html`（原生 DOM，可换 React/Vue） |
 | 测试 | `node:test`，mock `PluginContext`，不需要启动宿主 |
@@ -40,7 +42,7 @@ npm install
 
 ### 方式三：只要一个本地工程
 
-下载 ZIP 解压到任意目录，或用宿主的 MCP `plugin_project_create` 生成空工程后，把本模板的 `src/`、`vendor/`、`package.json` 等复制过去。
+下载 ZIP 解压到任意目录，或用宿主的 MCP `plugin_project_create` 生成空工程后，把本模板的 `src/`、`package.json`、`package-lock.json` 等复制过去。
 
 ---
 
@@ -69,14 +71,14 @@ npm install
 
 ## 环境要求
 
-- Node `22.23.3`、npm 10.x。本机开发用相近的 22.x 也能构建测试，但宿主的平台准备流程会校验 `engines.node` 这个固定版本。
+- Node `>=22.23.3 <23.0.0`、npm 10.x。宿主按选定 Node 的实际版本校验 engines；原生依赖必须单独验证各平台。
 - 大懒猫创作平台：在「系统设置 → 运行环境」配置本机 Node/npm；启用 MCP 服务中的插件工具可让外部编程工具直接调用。
-- 不需要全局安装任何包；SDK 由 npm 包 `blc-plugin-sdk@1.0.0` 提供，`npm install` 会从 registry 拉取（首次需联网），工程内不再保留 `vendor` 副本或 `.npmrc`。
+- SDK 固定依赖公开 npm 包 `blc-plugin-sdk@1.1.0`，无需本地 vendor 副本或全局安装。
 
-## 三条命令
+## 开发命令
 
 ```bash
-npm install           # 从 npm 安装 blc-plugin-sdk 等依赖，生成/更新 package-lock.json
+npm ci                # 从锁文件安装 blc-plugin-sdk@1.1.0 与开发依赖
 npm run typecheck     # UI 与后台两份 tsconfig 严格类型检查（不产出文件）
 npm run build         # tsc 编译后台到 dist/main.js，Vite 打包页面到 dist/ui/
 npm test              # node --test tests/*.test.mjs（依赖 dist/main.js，先 build）
@@ -89,7 +91,7 @@ dist/main.js          后台入口，对应清单的 biglazycat.main
 dist/ui/index.html    页面入口，对应清单的 contributes.views[].entry
 ```
 
-> `dist/` 与 `node_modules/` 不进版本库；`package-lock.json` 必须提交（含 SDK 版本与 integrity）。宿主的平台准备流程用 `npm ci` 安装，因此首次安装需能访问 npm registry。
+> `dist/` 与 `node_modules/` 不进版本库；`package-lock.json` 必须提交（含 SDK 版本与 registry integrity）。宿主的平台准备流程用 `npm ci` 安装，因此首次安装需能访问 npm registry。
 
 ---
 
@@ -122,7 +124,7 @@ dist/ui/index.html    页面入口，对应清单的 contributes.views[].entry
 **页面（`src/ui/main.ts`）**
 
 - `connect()` 连接宿主桥接，`context()` 取回视图会话与恢复状态（先校验类型再使用）。
-- `commands.invoke()` 返回宿主任务，用 `tasks.get()` 轮询到 `completed` 再取结果；失败/取消/不确定状态显式报错。
+- `commands.invoke()` 返回宿主任务，用 SDK 的 `waitForTask(sdk.tasks, task.id)` 限时等待完成再取结果；失败/取消/不确定状态显式报错。
 - `setState(state, dirty)` 保存小型恢复状态，`onSave()` 在宿主保存时写回并清 dirty；**不要**把大文件或机密放进 state。
 - 页面用原生 DOM 构建，避免 `innerHTML`；换成 React/Vue 只需改 `src/ui` 与 `vite.config.mjs` 的依赖，清单不动。
 
@@ -162,7 +164,7 @@ dist/ui/index.html    页面入口，对应清单的 contributes.views[].entry
 完整签名见 npm 包 [blc-plugin-sdk](https://www.npmjs.com/package/blc-plugin-sdk) 的 `index.d.ts` 与 [SDK 仓库 README](https://github.com/biglazycat-writer/blc-plugin-sdk#readme)：
 
 - `ctx.credentials` 存取密钥（Windows 为 DPAPI），**绝不**写入配置或日志。
-- `ctx.documents.snapshot / apply` 读写当前文档，`ctx.workspace` 与 `ctx.images` 读工作区资源与图片。
+- `readDocument(ctx.documents, target)` 读取 Markdown 固定快照；声明 `minimumApiRevision: 1` 后使用该能力。原位写回仍使用 `ctx.documents.snapshot/apply`，`ctx.workspace` 与 `ctx.images` 读工作区资源与图片。
 - `ctx.services` / `ctx.events` / `contributes.schedules`：服务、事件与定时任务。
 - 需要 React、状态管理、编辑器、网络请求等，直接加 npm 依赖并在 `src/ui` 或后台引入即可。
 
@@ -180,10 +182,16 @@ dist/ui/index.html    页面入口，对应清单的 contributes.views[].entry
 | `Cannot find module '../dist/main.js'` | 测试前先 `npm run build` |
 | `API_MISMATCH` | 页面必须在宿主插件视图内打开，不能用普通浏览器 |
 | 构建失败 | 看 `npm run typecheck` 输出与宿主 `plugin_diagnostics` |
-| `npm ci` 报引擎不匹配 | 宿主要求 `engines.node` 指定的 Node `22.23.3` |
-| `npm install` 找不到 `blc-plugin-sdk` | 检查 npm registry 可达性与 `package.json` 中的版本 `1.0.0` |
+| `npm ci` 报引擎不匹配 | 宿主要求 `engines.node` 指定的 Node `>=22.23.3 <23.0.0` |
+| `npm install` 找不到 `blc-plugin-sdk` | 检查 npm registry 可达性和 `blc-plugin-sdk@1.1.0` 依赖声明 |
 | 页面刷新后状态丢失 | 确认调用了 `setState`，且 `onSave` 里写回了状态 |
 
 ## 授权
 
 SDK 包 [blc-plugin-sdk](https://github.com/biglazycat-writer/blc-plugin-sdk) 为 MIT。本模板的示例代码可自由复制、修改并用于你自己的插件项目，无需署名；仓库整体的开源授权由维护者决定。
+
+## SDK 与平台支持
+
+本工程固定使用 npm 包 `blc-plugin-sdk@1.1.0`。页面调用通过 `waitForTask` 有限等待；超时后查询现有任务，不自动重新提交有副作用的操作。
+
+构建目标为 ES2022 / Chromium 109 / Safari 16.4。当前更新在 Windows amd64 完成测试；平台声明与编译目标不代表所有系统 WebView、原生依赖均已完成实机验证。
