@@ -66,6 +66,7 @@ npm install
 - 新增命令时**同时**改清单和 `src/main.ts`；所有命令都在激活期注册，不要在首次调用时补注册。
 - 页面入口 `entry` 指向构建产物 `dist/ui/index.html`，不要改成源码路径。
 - `package.json` 的 `biglazycat` 字段是唯一清单，字段集合受 npm 包 `blc-plugin-sdk` 的 `manifest.schema.json` 约束（顶层 `additionalProperties: false`，不能随意加字段）。
+- `scripts/package.mjs` 与 `.github/workflows/release.yml` **不需要改**：包名、版本、产物文件名都从 `package.json` 读取，改完 `name` / `version` 即可直接复用。
 
 ---
 
@@ -82,13 +83,15 @@ npm ci                # 从锁文件安装 blc-plugin-sdk@1.1.0 与开发依赖
 npm run typecheck     # UI 与后台两份 tsconfig 严格类型检查（不产出文件）
 npm run build         # tsc 编译后台到 dist/main.js，Vite 打包页面到 dist/ui/
 npm test              # node --test tests/*.test.mjs（依赖 dist/main.js，先 build）
+npm run package       # 构建并生成桌面端可安装的插件包 dist-package/<name>-<version>.tgz
 ```
 
 构建产物：
 
 ```
-dist/main.js          后台入口，对应清单的 biglazycat.main
-dist/ui/index.html    页面入口，对应清单的 contributes.views[].entry
+dist/main.js                         后台入口，对应清单的 biglazycat.main
+dist/ui/index.html                   页面入口，对应清单的 contributes.views[].entry
+dist-package/<name>-<version>.tgz    插件包（顶层 package/，可直接在桌面端安装）
 ```
 
 > `dist/` 与 `node_modules/` 不进版本库；`package-lock.json` 必须提交（含 SDK 版本与 registry integrity）。宿主的平台准备流程用 `npm ci` 安装，因此首次安装需能访问 npm registry。
@@ -103,6 +106,7 @@ dist/ui/index.html    页面入口，对应清单的 contributes.views[].entry
 ├─ tsconfig.json             页面类型检查（noEmit）
 ├─ tsconfig.node.json        后台编译（outDir: dist）
 ├─ vite.config.mjs           页面打包（root: src/ui）
+├─ scripts/package.mjs       插件打包：组装 package/ 目录、校验结构、生成 SHA-256
 ├─ src/
 │  ├─ main.ts                后台入口：definePlugin、命令注册、清理函数
 │  └─ ui/
@@ -111,6 +115,46 @@ dist/ui/index.html    页面入口，对应清单的 contributes.views[].entry
 │     └─ style.css           最小样式
 └─ tests/plugin.test.mjs     后台命令测试（mock 宿主上下文）
 ```
+
+## 打包与发布
+
+`npm run package` 生成桌面端可直接安装的插件包：
+
+```bash
+npm run package
+# ✓ blc-plugin-template-0.1.0.tgz（12 个条目）
+# ✓ 结构校验通过：顶层 package/，含 package.json 与 package-lock.json
+# ✓ SHA-256 ...
+```
+
+产物在 `dist-package/`，同目录生成 `.sha256` 校验文件。
+
+### 为什么必须用这个脚本
+
+桌面端安装插件包时只做两件事：解压、读取「解压根目录/`package.json`」。它的解压逻辑**只剥离 `package/` 前缀**，因此：
+
+- 归档顶层必须是 `package/`；
+- `package.json` 必须在 `package/` 下，不能再套一层 `你的插件-0.1.0/`；
+- 必须包含 `package-lock.json`，否则宿主「准备依赖」时无法执行 `npm ci`。
+
+自己用系统「压缩为 zip」或 `tar czf 插件名-版本.tar.gz 目录/` 很容易踩这个坑，桌面端会报找不到 `package.json`。`scripts/package.mjs` 按 `package.json` 的 `files` 字段组装 `package/` 目录、打包、校验结构并生成 SHA-256，所以请直接用 `npm run package`。
+
+### 在桌面端安装
+
+1. 「插件」→「安装插件」→ 来源选 **插件包 (.zip / .tgz)**；
+2. 选择 `dist-package/` 下的 `.tgz`；
+3. **勾选「准备依赖、类型检查并构建」** —— 包内不含 `node_modules`，宿主会执行 `npm ci` 安装依赖；不勾选会安装成功但运行时缺少依赖；
+4. 勾选信任说明后安装。
+
+### 发布 Release
+
+仓库自带 `.github/workflows/release.yml`：
+
+1. 修改 `package.json` 的 `version`（可选：在 `CHANGELOG.md` 补对应版本段落，Release notes 会自动取用）；
+2. 提交推送后打标签：`git tag -a v0.1.1 -m "v0.1.1" && git push origin v0.1.1`；
+3. 工作流自动执行 `npm ci` → `typecheck` → `test` → `npm run package`，然后创建 GitHub Release，附上 `.tgz` 与 `.sha256`。
+
+标签必须等于 `v` + `package.json` 的 `version`。只想验证构建时，在 Actions 页面手动运行 Release 工作流、`tag` 留空即可（产物上传为 artifact，不创建 Release）。
 
 ## 模板演示了什么
 

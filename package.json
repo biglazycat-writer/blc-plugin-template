@@ -10,7 +10,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit",
     "build": "tsc -p tsconfig.node.json && vite build",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "package": "node scripts/package.mjs"
   },
   "dependencies": {
     "blc-plugin-sdk": "1.1.0"
@@ -22,6 +23,7 @@
   },
   "files": [
     "dist",
+    "package-lock.json",
     "README.md",
     "README.en.md"
   ],
