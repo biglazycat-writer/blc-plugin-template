@@ -119,3 +119,7 @@ A few hard limits to keep in mind: a single command result is **< 1 MiB** and vi
 ## License
 
 The SDK package [blc-plugin-sdk](https://github.com/biglazycat-writer/blc-plugin-sdk) is MIT. This template's example code may be freely copied, modified and used in your own plugin projects, no attribution required; the repository's overall licensing is up to its maintainer.
+
+## Choosing feature locations
+
+Open plugin details in BigLazyCat Creator to choose where each declared feature appears. This plugin defines its features and supported locations in `contributes.features`; users choose among those locations. See the SDK [feature reference](https://github.com/biglazycat-writer/blc-plugin-sdk/blob/main/FEATURES.md) for the declaration format.

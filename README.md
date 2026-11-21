@@ -119,3 +119,7 @@ npm run package       # 生成插件包 dist-package/<name>-<version>.tgz 与 SH
 ## 授权
 
 SDK 包 [blc-plugin-sdk](https://github.com/biglazycat-writer/blc-plugin-sdk) 为 MIT。本模板的示例代码可自由复制、修改并用于你自己的插件项目，无需署名；仓库整体的开源授权由维护者决定。
+
+## 配置使用入口
+
+在大懒猫创作平台的插件详情中，为插件声明的功能选择使用入口。功能数量、支持的位置与对应动作由本插件的 `contributes.features` 决定；用户可以多选、取消或恢复默认。开发声明见 SDK 的 [功能入口协议](https://github.com/biglazycat-writer/blc-plugin-sdk/blob/main/FEATURES.md)。
