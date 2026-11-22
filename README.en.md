@@ -1,4 +1,4 @@
-# blc-plugin-template · BigLazyCat Creator Plugin Template
+# blc-plugin-template · BigLazyCat Writer Plugin Template
 
 **简体中文** | [English](README.en.md)
 
@@ -122,4 +122,4 @@ The SDK package [blc-plugin-sdk](https://github.com/biglazycat-writer/blc-plugin
 
 ## Choosing feature locations
 
-Open plugin details in BigLazyCat Creator to choose where each declared feature appears. This plugin defines its features and supported locations in `contributes.features`; users choose among those locations. See the SDK [feature reference](https://github.com/biglazycat-writer/blc-plugin-sdk/blob/main/FEATURES.md) for the declaration format.
+Open plugin details in BigLazyCat Writer to choose where each declared feature appears. This plugin defines its features and supported locations in `contributes.features`; users choose among those locations. See the SDK [feature reference](https://github.com/biglazycat-writer/blc-plugin-sdk/blob/main/FEATURES.md) for the declaration format.

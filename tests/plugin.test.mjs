@@ -5,7 +5,7 @@ import plugin from '../dist/main.js';
 
 const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 
-/** 用最小 mock 代替宿主 PluginContext，测试不依赖大懒猫创作平台。 */
+/** 用最小 mock 代替宿主 PluginContext，测试不依赖大懒猫写作。 */
 function harness() {
   const commands = new Map();
   const opened = [];
