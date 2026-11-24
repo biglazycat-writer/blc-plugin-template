@@ -1,6 +1,6 @@
 # blc-plugin-template · BigLazyCat Writer Plugin Template
 
-**简体中文** | [English](README.en.md)
+[简体中文](README.md) | **English**
 
 A **ready-to-run** starting point for plugins: backend commands, a browser view, recoverable view state, build configuration, tests and a release workflow are all set up. Clone it, rename a few identifiers, and start implementing your own plugin — no guessing manifest formats from an empty directory.
 
